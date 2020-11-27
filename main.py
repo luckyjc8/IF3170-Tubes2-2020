@@ -148,7 +148,7 @@ while(1):
 	if(check_win(player_board)):
 		print("You win!")
 		break
-	print("Real Board:\n")
+	print("Player Board:\n")
 	print_player_board(player_board)
 	move= input("Your move (example : '1,3' to open or 'f 1,3' to flag) : ")
 	if(validate(move)):
