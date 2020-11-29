@@ -99,45 +99,57 @@ def process_move(r_board,p_board,move):
 
 def reveal_board(r_board,p_board,i,j):
 	n = len(r_board)-1
-	if(r_board[i][j]!=-1 and p_board[i][j]=='?'):
-			p_board[i][j] = r_board[i][j]
-	if(i>0):
-		if(r_board[i-1][j]!=-1 and p_board[i-1][j]=='?'):
-			p_board[i-1][j] = r_board[i-1][j]
-	if(i>0 and j>0):
-		if(r_board[i-1][j-1]!=-1 and p_board[i-1][j-1]=='?'):
-			p_board[i-1][j-1] = r_board[i-1][j-1]
-	if(i<n):
-		if(r_board[i+1][j]!=-1 and p_board[i+1][j]=='?'):
-			p_board[i+1][j] = r_board[i+1][j]
-	if(i<n and j<n):
-		if(r_board[i+1][j+1]!=-1 and p_board[i+1][j+1]=='?'):
-			p_board[i+1][j+1] = r_board[i+1][j+1]
-	if(j>0):
-		if(r_board[i][j-1]!=-1 and p_board[i][j-1]=='?'):
-			p_board[i][j-1] = r_board[i][j-1]
-	if(i<n and j>0):
-		if(r_board[i+1][j-1]!=-1 and p_board[i+1][j-1]=='?'):
-			p_board[i+1][j-1] = r_board[i+1][j-1]
-	if(j<n):
-		if(r_board[i][j+1]!=-1 and p_board[i][j+1]=='?'):
-			p_board[i][j+1] = r_board[i][j+1]
-	if(i>0 and j<n):
-		if(r_board[i-1][j+1]!=-1 and p_board[i-1][j+1]=='?'):
-			p_board[i-1][j+1] = r_board[i-1][j+1]
+	if(r_board[i][j]!=0):
+		if(r_board[i][j]!=-1 and p_board[i][j]=='?'):
+				p_board[i][j] = r_board[i][j]
+		return 
+	else:
+		if(r_board[i][j] == 0):
+			if(i>0):
+				if(r_board[i-1][j]!=-1 and p_board[i-1][j]=='?'):
+					p_board[i-1][j] = r_board[i-1][j]
+					reveal_board(r_board,p_board,i-1,j)
+			if(i>0 and j>0):
+				if(r_board[i-1][j-1]!=-1 and p_board[i-1][j-1]=='?'):
+					p_board[i-1][j-1] = r_board[i-1][j-1]
+					reveal_board(r_board,p_board,i-1,j-1)
+			if(i<n):
+				if(r_board[i+1][j]!=-1 and p_board[i+1][j]=='?'):
+					p_board[i+1][j] = r_board[i+1][j]
+					reveal_board(r_board,p_board,i+1,j)
+			if(i<n and j<n):
+				if(r_board[i+1][j+1]!=-1 and p_board[i+1][j+1]=='?'):
+					p_board[i+1][j+1] = r_board[i+1][j+1]
+					reveal_board(r_board,p_board,i+1,j+1)
+			if(j>0):
+				if(r_board[i][j-1]!=-1 and p_board[i][j-1]=='?'):
+					p_board[i][j-1] = r_board[i][j-1]
+					reveal_board(r_board,p_board,i,j-1)
+			if(i<n and j>0):
+				if(r_board[i+1][j-1]!=-1 and p_board[i+1][j-1]=='?'):
+					p_board[i+1][j-1] = r_board[i+1][j-1]
+					reveal_board(r_board,p_board,i+1,j-1)
+			if(j<n):
+				if(r_board[i][j+1]!=-1 and p_board[i][j+1]=='?'):
+					p_board[i][j+1] = r_board[i][j+1]
+					reveal_board(r_board,p_board,i,j+1)
+			if(i>0 and j<n):
+				if(r_board[i-1][j+1]!=-1 and p_board[i-1][j+1]=='?'):
+					p_board[i-1][j+1] = r_board[i-1][j+1]
+					reveal_board(r_board,p_board,i-1,j+1)
 
-n_board = int(input())
+n_board = int(input("Masukkan ukuran board: "))
 while(n_board<4 or n_board>10):
 	print("Board size must be between 4 and 10!")
-	n_board = int(input())
+	n_board = int(input("Masukkan ukuran board: "))
 real_board = gen_board(n_board)
 player_board = gen_player_board(n_board)
 
-n_bomb = int(input())
+n_bomb = int(input("Masukkan jumlah bomb: "))
 bombs = []
 
 for i in range(n_bomb):
-	bomb = input().split(',')
+	bomb = input("Masukkan koordinat bomb : ").split(',')
 	bombs.append(bomb)
 
 reformat_board(real_board,bombs)
