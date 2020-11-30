@@ -1,149 +1,186 @@
-def print_real_board(board):
-	for i in range(len(board)):
-		temp = ""
-		for j in range(len(board)):
-			temp += ('b' if(board[i][j] == -1) else str(board[i][j])) + " "
-		print(temp)
+from analysis import *
 
-def print_player_board(board):
-	for i in range(len(board)):
-		temp = ""
-		for j in range(len(board)):
-			temp += str(board[i][j]) + " "
-		print(temp)
+class Minesweeper:
+	def __init__(self, n, bombs):
+		self.n_board = n
+		self.real_board = []
+		self.player_board = []
+		self.gen_real_board(bombs)
+		self.gen_player_board()
+		# self.analysis = Analysis('main.clp')
 
-def gen_board(n):
-	res = []
-	for i in range(n):
-		temp = []
-		for j in range(n):
-			temp.append(0)
-		res.append(temp)
-	return res
+	def gen_real_board(self, bombs):
+		for i in range(self.n_board):
+			temp = []
+			for j in range(self.n_board):
+				temp.append(0)
+			self.real_board.append(temp)
+		self.reformat_board(bombs)
+	
+	def gen_player_board(self):
+		for i in range(self.n_board):
+			temp = []
+			for j in range(self.n_board):
+				temp.append('?')
+			self.player_board.append(temp)
 
-def gen_player_board(n):
-	res = []
-	for i in range(n):
-		temp = []
-		for j in range(n):
-			temp.append('?')
-		res.append(temp)
-	return res
+	def reformat_board(self, bombs):
+		for bomb in bombs:
+			self.real_board[int(bomb[0])][int(bomb[1])] = -1
+			# self.analysis.create_facts(int(bomb[0]),int(bomb[1]),-1)
+		self.recalc_board()
 
-def reformat_board(board,bombs):
-	for bomb in bombs:
-		board[int(bomb[0])][int(bomb[1])] = -1
-	recalc_board(board)
+	def recalc_board(self):
+		for i in range(self.n_board):
+			for j in range(self.n_board):
+				if(self.real_board[i][j]!=-1):
+					self.real_board[i][j] = self.count_bombs(i,j)
+					# self.analysis.create_facts(i,j,self.real_board[i][j])
 
-def recalc_board(board):
-	for i in range(len(board)):
-		for j in range(len(board)):
-			if(board[i][j]!=-1):
-				board[i][j] = count_bombs(board,i,j)
+	def count_bombs(self, i, j):
+		res = 0
+		n = self.n_board-1
+		if(i>0):
+			res += (self.real_board[i-1][j] == -1)
+		if(i>0 and j>0):
+			res += (self.real_board[i-1][j-1] == -1)
+		if(i<n):
+			res += (self.real_board[i+1][j] == -1)
+		if(i<n and j<n):
+			res += (self.real_board[i+1][j+1] == -1)
+		if(j>0):
+			res += (self.real_board[i][j-1] == -1)
+		if(i<n and j>0):
+			res += (self.real_board[i+1][j-1] == -1)
+		if(j<n):
+			res += (self.real_board[i][j+1] == -1)
+		if(i>0 and j<n):
+			res += (self.real_board[i-1][j+1] == -1)
+		return res
 
-def count_bombs(board,i,j):
-	res = 0
-	n = len(board)-1
-	if(i>0):
-		res += (board[i-1][j] == -1)
-	if(i>0 and j>0):
-		res += (board[i-1][j-1] == -1)
-	if(i<n):
-		res += (board[i+1][j] == -1)
-	if(i<n and j<n):
-		res += (board[i+1][j+1] == -1)
-	if(j>0):
-		res += (board[i][j-1] == -1)
-	if(i<n and j>0):
-		res += (board[i+1][j-1] == -1)
-	if(j<n):
-		res += (board[i][j+1] == -1)
-	if(i>0 and j<n):
-		res += (board[i-1][j+1] == -1)
-	return res
+	def check_win(self):
+		for i in range(len(self.player_board)):
+			for j in range(len(self.player_board)):
+				if(self.player_board[i][j]=='?'):
+					return False
+		return True
 
-def check_win(board):
-	for i in range(len(board)):
-		for j in range(len(board)):
-			if(board[i][j]=='?'):
+	def validate(self, move):
+		m = move.split(" ")
+		arg = len(m)
+		if(arg==2):
+			if(m[0] != 'f'):
 				return False
-	return True
-
-def validate(move):
-	m = move.split(" ")
-	arg = len(m)
-	if(arg==2):
-		if(m[0] != 'f'):
-			return False
-		return (len(m[1].split(','))==2)
-	elif(arg==1):
-		return (len(m[0].split(','))==2)
-	else:
-		return False
-
-def process_move(r_board,p_board,move):
-	mov = move.split(" ")
-	if(len(mov)==2):
-		m = mov[1].split(",")
-		i = int(m[0])
-		j = int(m[1])
-		if(p_board[i][j] == 'f'):
-			p_board[i][j] = '?'
+			return (len(m[1].split(','))==2)
+		elif(arg==1):
+			return (len(m[0].split(','))==2)
 		else:
-			p_board[i][j] = 'f'
-	else:
-		m = mov[0].split(",")
-		i = int(m[0])
-		j = int(m[1])
-		reveal_board(r_board,p_board,i,j)
+			return False
 
-def reveal_board(r_board,p_board,i,j):
-	n = len(r_board)-1
-	if(r_board[i][j]!=0):
-		if(r_board[i][j]!=-1 and p_board[i][j]=='?'):
-				p_board[i][j] = r_board[i][j]
-		return 
-	else:
-		if(r_board[i][j] == 0):
-			if(i>0):
-				if(r_board[i-1][j]!=-1 and p_board[i-1][j]=='?'):
-					p_board[i-1][j] = r_board[i-1][j]
-					reveal_board(r_board,p_board,i-1,j)
-			if(i>0 and j>0):
-				if(r_board[i-1][j-1]!=-1 and p_board[i-1][j-1]=='?'):
-					p_board[i-1][j-1] = r_board[i-1][j-1]
-					reveal_board(r_board,p_board,i-1,j-1)
-			if(i<n):
-				if(r_board[i+1][j]!=-1 and p_board[i+1][j]=='?'):
-					p_board[i+1][j] = r_board[i+1][j]
-					reveal_board(r_board,p_board,i+1,j)
-			if(i<n and j<n):
-				if(r_board[i+1][j+1]!=-1 and p_board[i+1][j+1]=='?'):
-					p_board[i+1][j+1] = r_board[i+1][j+1]
-					reveal_board(r_board,p_board,i+1,j+1)
-			if(j>0):
-				if(r_board[i][j-1]!=-1 and p_board[i][j-1]=='?'):
-					p_board[i][j-1] = r_board[i][j-1]
-					reveal_board(r_board,p_board,i,j-1)
-			if(i<n and j>0):
-				if(r_board[i+1][j-1]!=-1 and p_board[i+1][j-1]=='?'):
-					p_board[i+1][j-1] = r_board[i+1][j-1]
-					reveal_board(r_board,p_board,i+1,j-1)
-			if(j<n):
-				if(r_board[i][j+1]!=-1 and p_board[i][j+1]=='?'):
-					p_board[i][j+1] = r_board[i][j+1]
-					reveal_board(r_board,p_board,i,j+1)
-			if(i>0 and j<n):
-				if(r_board[i-1][j+1]!=-1 and p_board[i-1][j+1]=='?'):
-					p_board[i-1][j+1] = r_board[i-1][j+1]
-					reveal_board(r_board,p_board,i-1,j+1)
+	def process_move(self, move):
+		mov = move.split(" ")
+		if(len(mov)==2):
+			m = mov[1].split(",")
+			i = int(m[0])
+			j = int(m[1])
+			if(self.player_board[i][j] == 'f'):
+				self.player_board[i][j] = '?'
+			else:
+				self.player_board[i][j] = 'f'
+		else:
+			m = mov[0].split(",")
+			i = int(m[0])
+			j = int(m[1])
+			self.reveal_board(i,j)
 
+	def choose_cell(self, i, j):
+		self.player_board[i][j] = self.real_board[i][j]
+	
+	def reveal_board(self,i,j):
+		n = self.n_board-1
+		if(self.real_board[i][j]!=0):
+			if(self.real_board[i][j]!=-1 and self.player_board[i][j]=='?'):
+					self.player_board[i][j] = self.real_board[i][j]
+			return 
+		else:
+			if(self.real_board[i][j] == 0):
+				self.player_board[i][j] = self.real_board[i][j]
+				if(i>0):
+					if(self.real_board[i-1][j]!=-1 and self.player_board[i-1][j]=='?'):
+						self.player_board[i-1][j] = self.real_board[i-1][j]
+						self.reveal_board(i-1,j)
+				if(i>0 and j>0):
+					if(self.real_board[i-1][j-1]!=-1 and self.player_board[i-1][j-1]=='?'):
+						self.player_board[i-1][j-1] = self.real_board[i-1][j-1]
+						self.reveal_board(i-1,j-1)
+				if(i<n):
+					if(self.real_board[i+1][j]!=-1 and self.player_board[i+1][j]=='?'):
+						self.player_board[i+1][j] = self.real_board[i+1][j]
+						self.reveal_board(i+1,j)
+				if(i<n and j<n):
+					if(self.real_board[i+1][j+1]!=-1 and self.player_board[i+1][j+1]=='?'):
+						self.player_board[i+1][j+1] = self.real_board[i+1][j+1]
+						self.reveal_board(i+1,j+1)
+				if(j>0):
+					if(self.real_board[i][j-1]!=-1 and self.player_board[i][j-1]=='?'):
+						self.player_board[i][j-1] = self.real_board[i][j-1]
+						self.reveal_board(i,j-1)
+				if(i<n and j>0):
+					if(self.real_board[i+1][j-1]!=-1 and self.player_board[i+1][j-1]=='?'):
+						self.player_board[i+1][j-1] = self.real_board[i+1][j-1]
+						self.reveal_board(i+1,j-1)
+				if(j<n):
+					if(self.real_board[i][j+1]!=-1 and self.player_board[i][j+1]=='?'):
+						self.player_board[i][j+1] = self.real_board[i][j+1]
+						self.reveal_board(i,j+1)
+				if(i>0 and j<n):
+					if(self.real_board[i-1][j+1]!=-1 and self.player_board[i-1][j+1]=='?'):
+						self.player_board[i-1][j+1] = self.real_board[i-1][j+1]
+						self.reveal_board(i-1,j+1)
+
+	def isBomb(self,i,j):
+		return (self.real_board[i][j] == -1)
+
+	def print_real_board(self):
+		for i in range(len(self.real_board)):
+			temp = ""
+			for j in range(len(self.real_board)):
+				temp += ('b' if(self.real_board[i][j] == -1) else str(self.real_board[i][j])) + " "
+			print(temp)
+
+	def print_player_board(self):
+		for i in range(len(self.player_board)):
+			temp = ""
+			for j in range(len(self.player_board)):
+				temp += str(self.player_board[i][j]) + " "
+			print(temp)
+
+	def generate_facts(self, i, j):
+		facts = []
+		n = self.n_board-1
+		if(i>0):
+			facts.append(['up',i,j,self.real_board[i-1][j]])
+		if(i>0 and j>0):
+			facts.append(['up-left',i,j,self.real_board[i-1][j-1]])
+		if(i<n):
+			facts.append(['down',i,j,self.real_board[i+1][j]])
+		if(i<n and j<n):
+			facts.append(['down-right',i,j,self.real_board[i+1][j+1]])
+		if(j>0):
+			facts.append(['left',i,j,self.real_board[i][j-1]])
+		if(i<n and j>0):
+			facts.append(['down-left',i,j,self.real_board[i+1][j-1]])
+		if(j<n):
+			facts.append(['right',i,j,self.real_board[i][j+1]])
+		if(i>0 and j<n):
+			facts.append(['up-right',i,j,self.real_board[i-1][j+1]])
+		return facts
+
+# Main Program
 n_board = int(input("Masukkan ukuran board: "))
 while(n_board<4 or n_board>10):
 	print("Board size must be between 4 and 10!")
 	n_board = int(input("Masukkan ukuran board: "))
-real_board = gen_board(n_board)
-player_board = gen_player_board(n_board)
 
 n_bomb = int(input("Masukkan jumlah bomb: "))
 bombs = []
@@ -152,24 +189,32 @@ for i in range(n_bomb):
 	bomb = input("Masukkan koordinat bomb : ").split(',')
 	bombs.append(bomb)
 
-reformat_board(real_board,bombs)
+minesweeper = Minesweeper(n_board,bombs)
+# analysis = Analysis('main.clp')
+
 print("Real Board:\n")
-print_real_board(real_board)
+minesweeper.print_real_board()
+
+# facts = minesweeper.generate_facts(0,0)
+# analysis.assertFacts(facts)
+
+# analysis.run()
+# facts = analysis.matched_facts()
 
 while(1):
-	if(check_win(player_board)):
+	if(minesweeper.check_win()):
 		print("You win!")
 		break
 	print("Player Board:\n")
-	print_player_board(player_board)
+	minesweeper.print_player_board()
 	move= input("Your move (example : '1,3' to open or 'f 1,3' to flag) : ")
-	if(validate(move)):
+	if(minesweeper.validate(move)):
 		mov = move.split(" ")
 		if(len(mov)==1):
 			m = mov[0].split(",")
-			if(real_board[int(m[0])][int(m[1])] == -1):
+			if(minesweeper.isBomb(int(m[0]),int(m[1]))):
 				print("BOOM!!!")
 				break
-		process_move(real_board,player_board,move)
+		minesweeper.process_move(move)
 	else:
 		print("Invalid move format!")
